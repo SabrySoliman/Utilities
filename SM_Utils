@@ -1,0 +1,116 @@
+package com.vodafone.sm.utils;
+
+import java.util.Base64;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class Utils {
+
+	private static final Logger logger = LoggerFactory.getLogger(Utils.class);
+
+	/**
+	 * Used to generate Basic Authentication Header Base64 Encode
+	 * <p>
+	 *
+	 * @param userName
+	 * @param userPassword
+	 * @return String Base64 encoded username and passwrod
+	 */
+	public static String generateBasicAutenticationHeader(String userName, String userPassword) {
+		logger.info("Start generateBasicAutenticationHeader Function");
+		byte[] encodedBytes = Base64.getEncoder().encode((userName + ":" + userPassword).getBytes());
+		logger.info("End generateBasicAutenticationHeader Function");
+		return "Basic " + new String(encodedBytes);
+	}
+
+	/**
+	 * Used to generate a unique Request Id
+	 * <p>
+	 *
+	 * @param channel
+	 * @return String the generated unique Request Id
+	 */
+	public static String generateUniqueSequence(String channel) {
+		logger.info("Start generateUniqueSequence Function");
+		String uniqueSequence = channel + "_" + System.currentTimeMillis() + "." + (int) (Math.random() * 5000);
+		logger.info("End generateUniqueSequence Function");
+		return uniqueSequence;
+	}
+
+	public static Map<String, String> buildParametersMap(HttpServletRequest httpServletRequest) {
+		logger.info("Start function buildParametersMap");
+		Map<String, String> resultMap = new HashMap<>();
+		Enumeration<String> parameterNames = httpServletRequest.getParameterNames();
+
+		while (parameterNames.hasMoreElements()) {
+			String key = parameterNames.nextElement();
+			String value = httpServletRequest.getParameter(key);
+			resultMap.put(key, value);
+		}
+		logger.info("End function buildParametersMap");
+		return resultMap;
+	}
+
+	@SuppressWarnings("rawtypes")
+	public static Map<String, String> buildHeadersMap(HttpServletRequest request) {
+		logger.info("Start function buildHeadersMap");
+
+		Map<String, String> map = new HashMap<>();
+
+		Enumeration headerNames = request.getHeaderNames();
+		while (headerNames.hasMoreElements()) {
+			String key = (String) headerNames.nextElement();
+			String value = request.getHeader(key);
+			map.put(key, value);
+		}
+		logger.info("End function buildHeadersMap");
+		return map;
+	}
+
+	public static Map<String, String> buildHeadersMap(HttpServletResponse response) {
+		logger.info("Start function buildHeadersMap");
+
+		Map<String, String> map = new HashMap<>();
+
+		Collection<String> headerNames = response.getHeaderNames();
+		for (String header : headerNames) {
+			if (!header.equals("authorization")) {
+				map.put(header, response.getHeader(header));
+			}
+
+		}
+		logger.info("End function buildHeadersMap");
+		return map;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static JSONArray removeDuplicatedJsonObject(JSONArray jsonArray) {
+		logger.info("Start function removeDuplicatedJsonObject");
+		Map<String, JSONObject> cleanMap = new HashMap<>();
+		JSONArray cleanJsonArray = new JSONArray();
+
+		for (Object object : jsonArray) {
+			if (object instanceof JSONObject) {
+				cleanMap.put(((JSONObject) object).toJSONString(), (JSONObject) object);
+			}
+		}
+		for (Entry<String, JSONObject> entry : cleanMap.entrySet()) {
+			cleanJsonArray.add(entry.getValue());
+		}
+
+		logger.info("End function removeDuplicatedJsonObject");
+		return cleanJsonArray;
+	}
+
+}
